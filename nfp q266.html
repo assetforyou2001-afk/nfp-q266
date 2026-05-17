@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q266 — Tree City</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --paper:#FAF6EE;
+  --paper-2:#F2EBDD;
+  --paper-3:#E8DFCB;
+  --ink:#1A1209;
+  --ink-2:#3D2C1E;
+  --ink-3:#7A6555;
+  --ink-4:#B5A48E;
+  --brick:#C44128;
+  --brick-2:#9E3320;
+  --brick-soft:#E07A5F;
+  --blue:#3B6FA0;
+  --purple:#7A4FB5;
+  --yellow:#FFE066;
+  --cr:28px;
+  --px:28px;
+  --py:30px;
+}
+
+html,body{width:100%;height:100%;background:#231A12;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Pretendard Variable','Pretendard',sans-serif;overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-weight:500}
+
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(196,65,40,.04) 0%,transparent 70%)}
+
+#stage{position:relative;z-index:1;
+  width:min(88vw,calc((100vh - 170px)*4/5));
+  height:min(calc(100vh - 170px),calc(88vw*5/4));
+  aspect-ratio:4/5;
+  max-width:520px;max-height:650px}
+
+.card{position:absolute;inset:0;border-radius:var(--cr);
+  padding:var(--py) var(--px);overflow:hidden;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transform:translateX(60px) scale(.98);
+  transition:opacity .32s cubic-bezier(.4,0,.2,1),transform .32s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;user-select:none;background:var(--paper);color:var(--ink);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.3)}
+.card.active{opacity:1;pointer-events:all;transform:translateX(0) scale(1)}
+.card.xl{opacity:0;transform:translateX(-60px) scale(.98)}
+.card.xr{opacity:0;transform:translateX(60px) scale(.98)}
+
+/* PAPER GRAIN */
+.card::before{content:'';position:absolute;inset:0;border-radius:var(--cr);
+  background-image:radial-gradient(circle,rgba(26,18,9,.07) 1px,transparent 1px);
+  background-size:5px 5px;pointer-events:none;z-index:1;opacity:.5}
+.card>*{position:relative;z-index:2}
+
+/* DARK VARIANT (for chaos, final) */
+.v-dark{background:#1A1209;color:var(--paper)}
+.v-dark::before{background-image:radial-gradient(circle,rgba(250,246,238,.04) 1px,transparent 1px)}
+
+/* TYPOGRAPHY */
+.f-disp{font-family:'Fraunces',serif;font-weight:900;
+  font-size:clamp(40px,7.8vw,58px);line-height:1.0;letter-spacing:-.025em}
+.f-h1{font-family:'Fraunces',serif;font-weight:900;
+  font-size:clamp(28px,5.2vw,38px);line-height:1.1;letter-spacing:-.02em}
+.f-h2{font-family:'Fraunces',serif;font-weight:700;
+  font-size:clamp(22px,3.8vw,28px);line-height:1.2;letter-spacing:-.01em}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;
+  background:var(--brick);color:#fff}
+.chip.outline{background:transparent;color:var(--brick);
+  border:1.5px solid var(--brick)}
+
+/* INLINE HIGHLIGHT MARKS - Q2 (blue/purple) */
+.mb{background:#C8E1F5;color:#1A3D5C;padding:1px 6px;border-radius:5px;font-weight:600}
+.mp{background:#E0D2F5;color:#3D1F66;padding:1px 6px;border-radius:5px;font-weight:600}
+.mr{color:var(--brick);font-weight:800}
+
+/* ═══ C1 COVER ═══ */
+#c1{justify-content:space-between}
+.ghost{position:absolute;right:-14px;top:24px;
+  font-family:'Fraunces',serif;font-weight:900;font-size:240px;line-height:.8;
+  color:transparent;-webkit-text-stroke:1.5px rgba(196,65,40,.18);
+  pointer-events:none;user-select:none;letter-spacing:-.05em;z-index:0}
+.c1-line{height:3px;background:var(--brick);width:48px;border-radius:99px;margin:16px 0}
+.c1-cta{background:var(--brick);color:#fff;font-size:14px;font-weight:800;
+  padding:9px 18px;border-radius:99px;
+  box-shadow:0 6px 20px rgba(196,65,40,.4)}
+
+/* ═══ C2 QUESTION ═══ */
+.qbox{background:var(--paper-2);border-left:4px solid var(--brick);
+  border-radius:0 14px 14px 0;padding:16px 18px;
+  font-size:15px;line-height:1.85;flex:1;font-weight:500;color:var(--ink-2);
+  border-top:1px solid rgba(26,18,9,.06);
+  border-right:1px solid rgba(26,18,9,.06);
+  border-bottom:1px solid rgba(26,18,9,.06)}
+.mcg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.mci{background:var(--paper-2);border-radius:12px;padding:11px 14px;
+  font-size:14px;font-weight:700;color:var(--ink-3);
+  border:1.5px solid rgba(26,18,9,.08)}
+.mci.ok{border-color:var(--brick);background:rgba(196,65,40,.1);color:var(--brick)}
+
+/* ═══ C3 CHAOS (DARK) ═══ */
+.fw{position:absolute;font-family:'Fraunces',serif;font-weight:900;
+  color:rgba(250,246,238,.07);animation:fw 7s ease-in-out infinite}
+.fw:nth-child(1){font-size:54px;top:14%;left:3%;animation-delay:0s}
+.fw:nth-child(2){font-size:32px;top:38%;right:5%;animation-delay:.9s}
+.fw:nth-child(3){font-size:62px;top:58%;left:7%;animation-delay:1.8s}
+.fw:nth-child(4){font-size:28px;top:78%;right:10%;animation-delay:2.7s}
+.fw:nth-child(5){font-size:42px;top:24%;left:52%;animation-delay:3.6s}
+@keyframes fw{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+.cc{background:rgba(250,246,238,.06);border:1.5px solid rgba(250,246,238,.1);
+  border-radius:16px;padding:14px 18px;font-size:16px;line-height:1.5;
+  font-weight:600;color:var(--paper)}
+.cc.hot{background:rgba(196,65,40,.18);border-color:rgba(196,65,40,.4);color:#FFB8A0}
+.cc.hot strong{color:var(--yellow)}
+
+/* ═══ C4 NFP ═══ */
+.nfp-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nc{background:var(--paper-2);border-radius:16px;padding:15px 16px;
+  border:1.5px solid rgba(26,18,9,.08)}
+.nct{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:12px;display:block;color:var(--brick)}
+.ni{font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:6px;font-weight:600}
+.ni strong{color:var(--ink);font-weight:800}
+.ni-tag{font-size:12px;font-weight:800;margin-top:12px;display:inline-block;
+  padding:5px 11px;border-radius:99px;background:var(--brick);color:#fff}
+.nalert{background:rgba(196,65,40,.08);border:1.5px solid rgba(196,65,40,.22);
+  border-radius:14px;padding:13px 16px;font-size:14.5px;line-height:1.65;
+  font-weight:600;color:var(--ink-2)}
+.nalert strong{color:var(--brick);font-weight:800}
+
+/* ═══ C5 FILTER ═══ */
+.sbox-b{background:rgba(196,65,40,.09);border:1.5px solid rgba(196,65,40,.28);
+  border-radius:18px;padding:14px 16px}
+.sc-hd{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px}
+.sco{display:flex;gap:7px;flex-wrap:wrap}
+.scopt{background:rgba(250,246,238,.7);border:1.5px solid rgba(26,18,9,.1);
+  border-radius:99px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--ink-3)}
+.scopt.on{background:var(--brick);border-color:var(--brick);color:#fff;
+  box-shadow:0 4px 14px rgba(196,65,40,.4)}
+.krow{display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:14px;
+  background:var(--paper-2);border:1.5px solid rgba(26,18,9,.06);
+  font-size:15px;font-weight:600;line-height:1.4;color:var(--ink-2)}
+.krow.hot{background:rgba(196,65,40,.1);border-color:rgba(196,65,40,.25);color:var(--ink)}
+.krow strong{color:var(--ink);font-weight:800}
+.kn{flex-shrink:0;width:26px;height:26px;border-radius:50%;
+  background:var(--brick);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;box-shadow:0 3px 10px rgba(196,65,40,.4)}
+
+/* ═══ C6 TRAPS ═══ */
+.trap{border-radius:16px;padding:14px 18px;display:flex;gap:12px;
+  align-items:flex-start;border:1.5px solid}
+.trap.bad{background:rgba(196,65,40,.08);border-color:rgba(196,65,40,.25)}
+.trap.good{background:rgba(34,120,60,.06);border-color:rgba(34,120,60,.25)}
+.trap-ico{font-size:22px;flex-shrink:0;line-height:1.1}
+.trap-kw{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.trap-kw.r{color:var(--brick)}.trap-kw.g{color:#22783C}
+.trap-bd{font-size:15px;line-height:1.55;color:var(--ink-2);font-weight:600}
+.trap-bd strong{color:var(--ink);font-weight:800}
+
+/* ═══ C7 3-PASS ═══ */
+.pass{flex:1;display:flex;gap:16px;align-items:center;padding:14px 18px;
+  border-radius:16px;background:var(--paper-2);border:1.5px solid rgba(26,18,9,.06)}
+.pass.hl{background:rgba(196,65,40,.1);border-color:rgba(196,65,40,.28)}
+.pn{font-family:'Fraunces',serif;font-size:48px;font-weight:900;line-height:.9;
+  color:var(--ink-4);flex-shrink:0}
+.pass.hl .pn{color:var(--brick)}
+.ptit{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px;line-height:1.2}
+.pdsc{font-size:14px;line-height:1.55;color:var(--ink-2);font-weight:600}
+.pdsc strong{color:var(--ink);font-weight:800}
+.pass.hl .pdsc{color:var(--brick-2)}
+.pass.hl .pdsc strong{color:var(--brick)}
+
+/* ═══ C8 FORMULA ═══ */
+.fwrap{background:var(--paper-2);border-radius:18px;padding:18px 20px;
+  border:1.5px solid rgba(26,18,9,.06)}
+.fr{display:flex;align-items:baseline;gap:12px;padding:8px 0}
+.fr:not(:last-child){border-bottom:1px solid rgba(26,18,9,.08)}
+.fsign{font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:var(--brick);width:18px;flex-shrink:0;text-align:center}
+.fnum{font-family:'Fraunces',serif;font-size:26px;font-weight:900;color:var(--ink);min-width:96px}
+.flbl{font-size:14px;color:var(--ink-2);font-weight:600}
+.fr.res{border-top:2.5px solid var(--ink)!important;margin-top:4px;padding-top:12px!important}
+.fr.res .fnum{color:var(--brick);font-size:32px}
+.fr.res .flbl{color:var(--brick);font-weight:800}
+
+.why-box{background:rgba(196,65,40,.08);border:1.5px solid rgba(196,65,40,.2);
+  border-radius:14px;padding:14px 18px;font-size:14px;line-height:1.7;
+  color:var(--ink-2);font-weight:600;margin-top:14px}
+.why-box strong{font-weight:800}
+
+/* ═══ C9 SPOTLIGHT ═══ */
+#c9{align-items:center;justify-content:center;
+  background:var(--brick);color:#FFF8F0;
+  box-shadow:0 24px 60px rgba(196,65,40,.5),0 8px 24px rgba(0,0,0,.4)}
+#c9::before{background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px)}
+.ans-lbl{font-size:13px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;opacity:.6}
+.ans-ch{font-family:'Fraunces',serif;font-size:clamp(110px,24vw,150px);
+  font-weight:900;color:#fff;line-height:.85;letter-spacing:-.04em}
+.ans-big{font-family:'Fraunces',serif;font-size:clamp(54px,12vw,78px);
+  font-weight:900;color:#FFF8F0;line-height:1;letter-spacing:-.02em;opacity:.85}
+.ans-bar{width:50%;height:2.5px;background:rgba(255,255,255,.3);border-radius:99px;margin:18px auto}
+.ans-box{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);
+  border-radius:16px;padding:14px 24px;text-align:center;font-size:16px;
+  color:#fff;line-height:1.65;font-weight:700}
+
+/* ═══ C10 TOP3 ═══ */
+.t3i{flex:1;border-radius:16px;padding:14px 18px;display:flex;gap:16px;
+  align-items:center;background:var(--paper-2);
+  border-left:4px solid;border-top:1.5px solid rgba(26,18,9,.05);
+  border-right:1.5px solid rgba(26,18,9,.05);border-bottom:1.5px solid rgba(26,18,9,.05)}
+.t3i:nth-child(1){border-left-color:var(--brick)}
+.t3i:nth-child(2){border-left-color:var(--brick-soft)}
+.t3i:nth-child(3){border-left-color:#D4A88A}
+.t3rk{font-family:'Fraunces',serif;font-size:42px;font-weight:900;line-height:.85;
+  color:var(--ink-4);flex-shrink:0}
+.t3kw{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;
+  background:rgba(196,65,40,.12);color:var(--brick);margin-bottom:5px;letter-spacing:.05em}
+.t3tit{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:3px;line-height:1.2}
+.t3dsc{font-size:13.5px;line-height:1.5;color:var(--ink-2);font-weight:600}
+
+/* ═══ C11 VARIATIONS ═══ */
+.vi{background:var(--paper-2);border-radius:14px;padding:12px 16px;
+  display:flex;align-items:center;gap:14px;border:1.5px solid rgba(26,18,9,.06)}
+.vi.hot{border-color:var(--brick);background:rgba(196,65,40,.08);
+  box-shadow:0 4px 16px rgba(196,65,40,.15)}
+.vtag{writing-mode:vertical-rl;font-size:10px;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);flex-shrink:0}
+.vi.hot .vtag{color:var(--brick)}
+.vq{font-size:13px;color:var(--ink-2);line-height:1.4;margin-bottom:4px;font-weight:600}
+.va{font-family:'Fraunces',serif;font-size:26px;font-weight:900;color:var(--ink);line-height:1}
+.vi.hot .va{color:var(--brick)}
+.vbg{font-size:11px;font-weight:800;padding:4px 11px;border-radius:99px;
+  background:var(--ink-3);color:#fff;flex-shrink:0}
+.vbg.b{background:var(--brick);color:#fff}
+
+/* ═══ C12 FINAL (DARK + YELLOW HIGHLIGHT) ═══ */
+#c12{background:#1A1209;color:var(--paper);justify-content:space-between}
+#c12::before{background-image:radial-gradient(circle,rgba(250,246,238,.04) 1px,transparent 1px)}
+.ffml{background:var(--yellow);border-radius:18px;padding:20px 22px;color:#1A1209;
+  box-shadow:0 16px 40px rgba(255,224,102,.25)}
+.fft{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  opacity:.5;margin-bottom:9px}
+.ffb{font-size:16px;font-weight:700;line-height:1.75;color:#1A1209}
+.ffb .ac{color:var(--brick);font-weight:900}
+.fmantra{font-family:'Fraunces',serif;font-size:clamp(26px,5.2vw,36px);
+  font-weight:900;color:var(--yellow);line-height:1.15;letter-spacing:-.01em}
+.fsub{font-size:14px;color:rgba(250,246,238,.55);margin-top:12px;line-height:1.7;font-weight:500}
+.f12-label{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--yellow);opacity:.7;margin-bottom:10px}
+
+/* CONTROLS */
+#ctrl{display:flex;align-items:center;gap:18px;margin-top:22px;z-index:2}
+.nb{width:46px;height:46px;border-radius:50%;
+  background:rgba(250,246,238,.1);border:1.5px solid rgba(250,246,238,.18);
+  color:var(--paper);font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.nb:hover{background:var(--brick);border-color:var(--brick);
+  box-shadow:0 0 20px rgba(196,65,40,.4);transform:scale(1.08)}
+.nb:active{transform:scale(.92)}
+#pw{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:130px}
+#ctr{font-size:13px;color:rgba(250,246,238,.45);letter-spacing:.08em;font-weight:700}
+#pbbg{width:130px;height:3px;background:rgba(250,246,238,.12);border-radius:99px;overflow:hidden}
+#pb{height:100%;background:var(--brick);border-radius:99px;
+  transition:width .34s cubic-bezier(.4,0,.2,1)}
+
+.sh{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:rgba(26,18,9,.3);pointer-events:none;z-index:20;
+  white-space:nowrap;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- C1 -->
+<div class="card active" id="c1">
+  <div style="display:flex;align-items:center;gap:7px">
+    <span class="chip">CPA &#xB7; FAR</span>
+    <span class="chip outline">Governmental</span>
+  </div>
+  <div class="ghost">266</div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="f-disp">Fund Balance<br><span style="color:var(--brick)">&#8594; Net Position</span></div>
+    <div class="c1-line"></div>
+    <div style="font-size:17px;color:var(--ink-2);line-height:1.55;font-weight:600">&#xBCC0;&#xD658; &#xACF5;&#xC2DD; &#xB458;.<br><span style="color:var(--ink);font-weight:800">Capital +, Depreciation &#x2212;</span></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:12px;color:var(--ink-3);font-weight:700;letter-spacing:.08em">Q266 &#x2605; TREE CITY</span>
+    <span class="c1-cta">&#xB2F5; (c) $7,500</span>
+  </div>
+  <div class="sh">&#x2190; SWIPE &#x2192;</div>
+</div>
+
+<!-- C2 -->
+<div class="card" id="c2">
+  <div style="margin-bottom:12px"><span class="chip">&#xBB38;&#xC81C; &#xC6D0;&#xBB38;</span></div>
+  <div class="f-h2" style="margin-bottom:12px">Q266 &#x2014; &#xC6D0;&#xBB38;</div>
+  <div class="qbox">Tree City reported a <span class="mb">$1,500 net increase</span> in fund balance for governmental funds. Tree purchased <span class="mp">general capital assets of $9,000</span> and recorded <span class="mp">depreciation expense of $3,000</span>. <span class="mr">What amount should Tree report as the change in net position for governmental activities?</span></div>
+  <div class="mcg">
+    <div class="mci">a. ($4,500)</div>
+    <div class="mci ok">c. $7,500 &#x2713;</div>
+    <div class="mci">b. $1,500</div>
+    <div class="mci">d. $10,500</div>
+  </div>
+</div>
+
+<!-- C3 -->
+<div class="card v-dark" id="c3">
+  <div style="position:absolute;inset:0;overflow:hidden;border-radius:var(--cr);z-index:0">
+    <span class="fw">Expenditure</span>
+    <span class="fw">Depreciation</span>
+    <span class="fw">Capital</span>
+    <span class="fw">Reconcile</span>
+    <span class="fw">Govt-wide</span>
+  </div>
+  <div style="margin-bottom:18px">
+    <span style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brick-soft)">&#xC774;&#xB7F0; &#xB290;&#xAE08;?</span>
+    <div class="f-h1" style="color:var(--paper);margin-top:7px">&#xBA58;&#xD0C8;<br>&#xB098;&#xAC10; &#x3131;&#x3131;</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center">
+    <div class="cc">&#x1F635; <strong>$1,500</strong> &#xC544;&#xB2D8;?</div>
+    <div class="cc">&#x1F92F; $9,000 &#xC4F0;&#xBA74; &#x2212;&#xC544;&#xB2D8;?</div>
+    <div class="cc hot">&#x1F4A1; <strong>NFP &#xAD6C;&#xC870;</strong> &#xC774;&#xD574; &#x2192; <strong>30&#xCD08;</strong> &#xCEF7;</div>
+  </div>
+</div>
+
+<!-- C4 -->
+<div class="card" id="c4">
+  <div style="margin-bottom:12px"><span class="chip">&#xBC30;&#xACBD; &#xAC1C;&#xB150;</span></div>
+  <div class="f-h1" style="margin-bottom:16px">&#xC65C; &#xC7AC;&#xBB34;&#xC81C;&#xD45C;&#xAC00;<br>&#xB450; &#xAC1C;?</div>
+  <div style="display:flex;flex-direction:column;gap:11px;flex:1">
+    <div class="nfp-two">
+      <div class="nc">
+        <span class="nct">&#x1F3DB; FUND</span>
+        <div class="ni"><strong>&#xB2E8;&#xAE30;</strong> &#xC7AC;&#xC815;</div>
+        <div class="ni">&#xC790;&#xC0B0;&#xD654; <strong>&#xC548;&#xD568;</strong></div>
+        <div class="ni">&#xAC10;&#xAC00;&#xC0C1;&#xAC01; <strong>X</strong></div>
+        <span class="ni-tag">&#xD604;&#xAE08; &#xAD00;&#xC810;</span>
+      </div>
+      <div class="nc">
+        <span class="nct">&#x1F310; GOV'T-WIDE</span>
+        <div class="ni"><strong>&#xC7A5;&#xAE30;</strong> &#xC131;&#xACFC;</div>
+        <div class="ni">&#xC790;&#xC0B0;&#xD654; <strong>&#xD568;</strong></div>
+        <div class="ni">&#xAC10;&#xAC00;&#xC0C1;&#xAC01; <strong>O</strong></div>
+        <span class="ni-tag">&#xC131;&#xACFC; &#xAD00;&#xC810;</span>
+      </div>
+    </div>
+    <div class="nalert">&#x1F4A1; &#xB450; &#xAD00;&#xC810; &#xCC28;&#xC774; &#x2192; <strong>Reconciliation</strong>&#xC73C;&#xB85C; &#xC5F0;&#xACB0;. &#xC774;&#xAC8C; &#xC774; &#xBB38;&#xC81C;&#xC758; &#xC804;&#xBD80;.</div>
+  </div>
+</div>
+
+<!-- C5 -->
+<div class="card" id="c5">
+  <div style="margin-bottom:10px"><span class="chip">&#xB178;&#xC774;&#xC988; &#xD544;&#xD130;</span></div>
+  <div class="f-h1" style="margin-bottom:4px">&#xADFC;&#xB370;<br>&#xADF8; &#xC804;&#xC5D0;</div>
+  <div style="font-size:15px;color:var(--ink-2);margin-bottom:14px;font-weight:600">&#xC5B4;&#xB290; Statement?</div>
+  <div class="sbox-b" style="margin-bottom:13px">
+    <div class="sc-hd">Section?</div>
+    <div class="sco">
+      <div class="scopt">Operating</div>
+      <div class="scopt">Investing</div>
+      <div class="scopt on">&#x2713; Govt-wide</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+    <div class="krow"><div class="kn">1</div><div>FB: <strong>$1,500</strong></div></div>
+    <div class="krow"><div class="kn">2</div><div>Capital: <strong>$9,000</strong></div></div>
+    <div class="krow"><div class="kn">3</div><div>Depreciation: <strong>$3,000</strong></div></div>
+  </div>
+</div>
+
+<!-- C6 -->
+<div class="card" id="c6">
+  <div style="margin-bottom:12px"><span class="chip">&#xD568;&#xC815; &#xACA9;&#xD30C;</span></div>
+  <div class="f-h1" style="margin-bottom:16px">&#xCD9C;&#xC81C;&#xC790;&#xC758;<br>&#xD568;&#xC815;</div>
+  <div style="display:flex;flex-direction:column;gap:11px;flex:1">
+    <div class="trap bad">
+      <div class="trap-ico">&#x1FA64;</div>
+      <div><div class="trap-kw r">b. $1,500</div>
+      <div class="trap-bd">FB &#xADF8;&#xB300;&#xB85C; &#xC4F8;</div></div>
+    </div>
+    <div class="trap bad">
+      <div class="trap-ico">&#x1FA64;</div>
+      <div><div class="trap-kw r">d. $10,500</div>
+      <div class="trap-bd">Depreciation&#xB3C4; <strong>&#xB354;&#xD568;</strong></div></div>
+    </div>
+    <div class="trap bad">
+      <div class="trap-ico">&#x1FA64;</div>
+      <div><div class="trap-kw r">a. ($4,500)</div>
+      <div class="trap-bd">Capital&#xC744; <strong>&#xBE7C;</strong></div></div>
+    </div>
+    <div class="trap good">
+      <div class="trap-ico">&#x2705;</div>
+      <div><div class="trap-kw g">&#xC815;&#xB2F5;</div>
+      <div class="trap-bd"><strong>+Capital</strong> &nbsp;/&nbsp; <strong>&#x2212;Depreciation</strong></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- C7 -->
+<div class="card" id="c7">
+  <div style="margin-bottom:12px"><span class="chip">3&#xD328;&#xC2A4; &#xB3C5;&#xD574;</span></div>
+  <div class="f-h1" style="margin-bottom:16px">30&#xCD08; &#xB8E8;&#xD2F4;</div>
+  <div style="display:flex;flex-direction:column;gap:11px;flex:1">
+    <div class="pass">
+      <div class="pn">1</div>
+      <div><div class="ptit">&#xAD6C;&#xC870; &#xD30C;&#xC545;</div>
+      <div class="pdsc">"net position" &#x2192; <strong>Gov't-wide</strong></div></div>
+    </div>
+    <div class="pass">
+      <div class="pn">2</div>
+      <div><div class="ptit">&#xC22B;&#xC790; &#xCD94;&#xCD9C;</div>
+      <div class="pdsc">1,500 &#xB7; 9,000 &#xB7; 3,000</div></div>
+    </div>
+    <div class="pass hl">
+      <div class="pn">3</div>
+      <div><div class="ptit">&#xBC29;&#xD5A5; &#xAC80;&#xC0B0;</div>
+      <div class="pdsc">1,500 + 9,000 &#x2212; 3,000 = <strong>$7,500</strong></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- C8 -->
+<div class="card" id="c8">
+  <div style="margin-bottom:12px"><span class="chip">Reconciliation</span></div>
+  <div class="f-h1" style="margin-bottom:14px;font-size:clamp(24px,4.5vw,32px)">&#xACC4;&#xC0B0;</div>
+  <div class="fwrap">
+    <div class="fr"><div class="fsign">&nbsp;</div><div class="fnum">$1,500</div><div class="flbl">FB change</div></div>
+    <div class="fr"><div class="fsign">+</div><div class="fnum">$9,000</div><div class="flbl">Capital</div></div>
+    <div class="fr"><div class="fsign">&#x2212;</div><div class="fnum">$3,000</div><div class="flbl">Depreciation</div></div>
+    <div class="fr res"><div class="fsign">=</div><div class="fnum">$7,500</div><div class="flbl">Net Position &#x2713;</div></div>
+  </div>
+  <div class="why-box">
+    <strong style="color:var(--brick)">+9,000:</strong> Fund&#xC5D0;&#xC11C; &#xC774;&#xBBF8; &#xCC28;&#xAC10; &#x2192; &#xBCF5;&#xC6D0;<br>
+    <strong style="color:var(--brick)">&#x2212;3,000:</strong> Gov't-wide&#xC5D0;&#xC11C;&#xB9CC; &#xBE44;&#xC6A9; &#xC778;&#xC2DD;
+  </div>
+</div>
+
+<!-- C9 ANSWER -->
+<div class="card" id="c9">
+  <div class="ans-lbl">&#xC815;&#xB2F5;</div>
+  <div class="ans-ch">(c)</div>
+  <div class="ans-big">$7,500</div>
+  <div class="ans-bar"></div>
+  <div class="ans-box">$1,500 + $9,000 &#x2212; $3,000<br><strong>&#xADF8;&#xB0E5; &#xB04A;.</strong></div>
+</div>
+
+<!-- C10 -->
+<div class="card" id="c10">
+  <div style="margin-bottom:12px"><span class="chip">&#xD568;&#xC815; TOP 3</span></div>
+  <div class="f-h1" style="margin-bottom:16px">&#xD2C0;&#xB9AC;&#xB294;<br>&#xD328;&#xD134;</div>
+  <div style="display:flex;flex-direction:column;gap:11px;flex:1">
+    <div class="t3i">
+      <div class="t3rk">01</div>
+      <div><div class="t3kw">b. $1,500</div><div class="t3tit">FB &#xADF8;&#xB300;&#xB85C;</div>
+      <div class="t3dsc">&#xC870;&#xC815; &#xC2A4;&#xD15D; &#xC0DD;&#xB7B5;</div></div>
+    </div>
+    <div class="t3i">
+      <div class="t3rk">02</div>
+      <div><div class="t3kw">d. $10,500</div><div class="t3tit">&#xBC29;&#xD5A5; &#xC624;&#xB958;</div>
+      <div class="t3dsc">Depreciation &#xB354;&#xD568;</div></div>
+    </div>
+    <div class="t3i">
+      <div class="t3rk">03</div>
+      <div><div class="t3kw">a. ($4,500)</div><div class="t3tit">Capital &#xBC18;&#xC804;</div>
+      <div class="t3dsc">add-back &#xBD80;&#xC7AC;</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- C11 -->
+<div class="card" id="c11">
+  <div style="margin-bottom:12px"><span class="chip">&#xBCF4;&#xB108;&#xC2A4;</span></div>
+  <div class="f-h1" style="margin-bottom:16px">&#xAC19;&#xC740; &#xBB38;&#xC81C;,<br>&#xB2E4;&#xB978; &#xB2F5;</div>
+  <div style="display:flex;flex-direction:column;gap:9px;flex:1">
+    <div class="vi"><div class="vtag">Fund</div><div style="flex:1"><div class="vq">FB &#xBCC0;&#xB3D9;</div><div class="va">$1,500</div></div><div class="vbg">Fund</div></div>
+    <div class="vi hot"><div class="vtag">&#x2192; &#xC774;&#xBB38;&#xC81C;</div><div style="flex:1"><div class="vq">Net Position</div><div class="va">$7,500 &#x2713;</div></div><div class="vbg b">Govt</div></div>
+    <div class="vi"><div class="vtag">+Cap</div><div style="flex:1"><div class="vq">Capital&#xB9CC; add</div><div class="va">$10,500</div></div><div class="vbg">&#xBD80;&#xBD84;</div></div>
+    <div class="vi"><div class="vtag">&#x2212;Dep</div><div style="flex:1"><div class="vq">Depr&#xB9CC;</div><div class="va">($1,500)</div></div><div class="vbg">&#xBD80;&#xBD84;</div></div>
+  </div>
+</div>
+
+<!-- C12 FINAL (DARK + YELLOW) -->
+<div class="card" id="c12">
+  <div>
+    <div class="f12-label">&#xB9C8;&#xBB34;&#xB9AC;</div>
+    <div class="f-h2" style="color:var(--paper)">&#xC870;&#xC815; &#xACF5;&#xC2DD;</div>
+  </div>
+  <div class="ffml">
+    <div class="fft">&#xC554;&#xAE30;</div>
+    <div class="ffb">
+      <strong>Net Position</strong><br>
+      = FB change<br>
+      &nbsp;<span class="ac">&#xFF0B;</span> Capital<br>
+      &nbsp;<span class="ac">&#xFF0D;</span> Depreciation
+    </div>
+  </div>
+  <div>
+    <div class="fmantra">Capital +<br>Depreciation &#x2212;</div>
+    <div class="fsub">&#xC774;&#xC720; &#xC774;&#xD574;&#xD558;&#xBA74; &#xBC29;&#xD5A5; &#xC2EC;&#xC9C0; &#xC548; &#xB418;&#xB294;. &#xADF8;&#xB0E5; &#xB04A;.</div>
+  </div>
+</div>
+
+</div>
+<div id="ctrl">
+  <button class="nb" id="prev">&#x2190;</button>
+  <div id="pw"><div id="ctr">1 / 12</div><div id="pbbg"><div id="pb" style="width:8.33%"></div></div></div>
+  <button class="nb" id="next">&#x2192;</button>
+</div>
+<script>
+const N=12;let cur=1,busy=false;
+function go(n,d){if(busy||n<1||n>N)return;busy=true;
+  const pv=document.getElementById('c'+cur),nx=document.getElementById('c'+n);
+  pv.classList.remove('active');pv.classList.add(d===1?'xl':'xr');
+  nx.style.transition='none';
+  nx.style.transform=d===1?'translateX(60px) scale(.98)':'translateX(-60px) scale(.98)';
+  nx.style.opacity='0';
+  nx.classList.add('active');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{nx.style.transition='';nx.style.transform='';nx.style.opacity=''}));
+  setTimeout(()=>{pv.classList.remove('xl','xr');busy=false},340);
+  cur=n;document.getElementById('ctr').textContent=cur+' / '+N;
+  document.getElementById('pb').style.width=(cur/N*100)+'%'}
+document.getElementById('next').onclick=()=>go(cur+1,1);
+document.getElementById('prev').onclick=()=>go(cur-1,-1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(cur+1,1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(cur-1,-1)});
+let sx=0,sy=0,drag=false;
+const st=document.getElementById('stage');
+const os=(x,y)=>{sx=x;sy=y;drag=true};
+const oe=(x,y)=>{if(!drag)return;drag=false;const dx=x-sx,dy=y-sy;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40)go(cur+(dx<0?1:-1),dx<0?1:-1)};
+st.addEventListener('touchstart',e=>os(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+st.addEventListener('touchend',e=>oe(e.changedTouches[0].clientX,e.changedTouches[0].clientY));
+st.addEventListener('mousedown',e=>os(e.clientX,e.clientY));
+st.addEventListener('mouseup',e=>oe(e.clientX,e.clientY));
+st.addEventListener('click',e=>{const r=st.getBoundingClientRect(),x=e.clientX-r.left;
+  if(x>r.width*.62)go(cur+1,1);else if(x<r.width*.38)go(cur-1,-1)});
+</script>
+</body>
+</html>
